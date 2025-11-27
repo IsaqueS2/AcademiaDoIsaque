@@ -5,8 +5,6 @@ namespace AcademiaDoZe.Application.Enums
     [Flags]
     public enum EAppMatriculaRestricoes
     {
-        [Display(Name = "Nenhuma Restrição")]
-        None = 0,
         [Display(Name = "Diabetes")]
         Diabetes = 1,
         [Display(Name = "Pressão Alta")]
@@ -15,9 +13,9 @@ namespace AcademiaDoZe.Application.Enums
         Labirintite = 4,
         [Display(Name = "Alergias")]
         Alergias = 8,
-        [Display(Name = "Problemas Respiratórios")]
-        ProblemasRespiratorios = 16,
-        [Display(Name = "Remédio Contínuo")]
-        RemedioContinuo = 32
+        [Display(Name = "Tuberculose")]
+        Tuberculose = 16,
+        [Display(Name = "Pneumonia")]
+        Pneumonia = 32
     }
 }

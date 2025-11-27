@@ -18,21 +18,21 @@ namespace AcademiaDoZe.Application.Mappings
                 Objetivo = matricula.Objetivo,
                 RestricoesMedicas = matricula.RestricoesMedicas.ToApp(),
                 ObservacoesRestricoes = matricula.ObservacoesRestricoes,
-                LaudoMedico = matricula.LaudoMedico != null ? new ArquivoDTO { Conteudo = matricula.LaudoMedico.Conteudo } : null, 
+                LaudoMedico = matricula.LaudoMedico != null ? new ArquivoDTO { Conteudo = matricula.LaudoMedico.Conteudo } : null, // Mapeia laudo para DTO
             };
         }
         public static Matricula ToEntity(this MatriculaDTO matriculaDto)
         {
             return Matricula.Criar(
             matriculaDto.Id,
-            matriculaDto.AlunoMatricula.ToEntityMatricula(), 
+            matriculaDto.AlunoMatricula.ToEntityMatricula(), // Mapeia aluno do DTO para a entidade, resolvendo o caso da senha null
             matriculaDto.Plano.ToDomain(),
             matriculaDto.DataInicio,
             matriculaDto.DataFim,
             matriculaDto.Objetivo,
             matriculaDto.RestricoesMedicas.ToDomain(),
             matriculaDto.ObservacoesRestricoes!,
-            (matriculaDto.LaudoMedico?.Conteudo != null) ? Arquivo.Criar(matriculaDto.LaudoMedico.Conteudo) : null! 
+            (matriculaDto.LaudoMedico?.Conteudo != null) ? Arquivo.Criar(matriculaDto.LaudoMedico.Conteudo) : null! // Mapeia laudo do DTO para a entidade
             );
         }
         public static Matricula UpdateFromDto(this Matricula matricula, MatriculaDTO matriculaDto)
@@ -46,7 +46,7 @@ namespace AcademiaDoZe.Application.Mappings
             matriculaDto.Objetivo ?? matricula.Objetivo,
             matriculaDto.RestricoesMedicas != default ? matriculaDto.RestricoesMedicas.ToDomain() : matricula.RestricoesMedicas,
             matriculaDto.ObservacoesRestricoes ?? matricula.ObservacoesRestricoes,
-            (matriculaDto.LaudoMedico?.Conteudo != null) ? Arquivo.Criar(matriculaDto.LaudoMedico.Conteudo) : matricula.LaudoMedico 
+            (matriculaDto.LaudoMedico?.Conteudo != null) ? Arquivo.Criar(matriculaDto.LaudoMedico.Conteudo) : matricula.LaudoMedico // Atualiza laudo se fornecido
             );
         }
     }

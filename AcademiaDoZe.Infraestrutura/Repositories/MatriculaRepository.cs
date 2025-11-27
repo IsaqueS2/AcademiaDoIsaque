@@ -1,5 +1,4 @@
-﻿//Peterson Wigggers
-using Academia.Domain.Entities;
+﻿using Academia.Domain.Entities;
 using AcademiaDoZe.Domain.Enums;
 using AcademiaDoZe.Domain.Repositories;
 using AcademiaDoZe.Infrastructure.Data;
@@ -12,7 +11,7 @@ namespace AcademiaDoZe.Infraestrutura.Repositories
 {
     public class MatriculaRepository : BaseRepository<Matricula>, IMatriculaRepository
     {
-        public MatriculaRepository (string connectionString, DatabaseType databaseType) : base (connectionString, databaseType) { }
+        public MatriculaRepository(string connectionString, DatabaseType databaseType) : base(connectionString, databaseType) { }
         public override async Task<Matricula> Adicionar(Matricula entity)
         {
             try
@@ -24,11 +23,11 @@ namespace AcademiaDoZe.Infraestrutura.Repositories
                 await using var connection = await GetOpenConnectionAsync();
                 string query = _databaseType == DatabaseType.SqlServer
                 ?
-                $"INSERT INTO {TableName} (aluno_id, plano, data_inicio, data_fim, objetivo, restricao_medica, obs_restricao) " +
+                $"INSERT INTO {TableName} (aluno_id, plano, data_inicio, data_fim, objetivo, restricao_medica, obs_restricao, laudo_medico) " +
                 $"OUTPUT INSERTED.id_matricula " +
-                $"VALUES (@Aluno_id, @Plano, @Data_inicio, @Data_fim, @Objetivo, @Restricao_medica, @Obs_restricao);"
-                : $"INSERT INTO {TableName} (aluno_id,  plano, data_inicio, data_fim, objetivo, restricao_medica, obs_restricao) "
-                + "VALUES (@Aluno_id, @Plano, @Data_inicio, @Data_fim, @Objetivo, @Restricao_medica, @Obs_restricao); "
+                $"VALUES (@Aluno_id, @Plano, @Data_inicio, @Data_fim, @Objetivo, @Restricao_medica, @Obs_restricao, @Laudo_medico);"
+                : $"INSERT INTO {TableName} (aluno_id,  plano, data_inicio, data_fim, objetivo, restricao_medica, obs_restricao, laudo_medico) "
+                + "VALUES (@Aluno_id, @Plano, @Data_inicio, @Data_fim, @Objetivo, @Restricao_medica, @Obs_restricao, @Laudo_medico); "
                 + "SELECT LAST_INSERT_ID();";
                 await using var command = DbProvider.CreateCommand(query, connection);
                 command.Parameters.Add(DbProvider.CreateParameter("@Aluno_id", entity.AlunoMatricula.Id, DbType.String, _databaseType));
@@ -38,6 +37,7 @@ namespace AcademiaDoZe.Infraestrutura.Repositories
                 command.Parameters.Add(DbProvider.CreateParameter("@Objetivo", entity.Objetivo, DbType.String, _databaseType));
                 command.Parameters.Add(DbProvider.CreateParameter("@Restricao_medica", (int)entity.RestricoesMedicas, DbType.Int32, _databaseType));
                 command.Parameters.Add(DbProvider.CreateParameter("@Obs_restricao", entity.ObservacoesRestricoes, DbType.String, _databaseType));
+                command.Parameters.Add(DbProvider.CreateParameter("@Laudo_medico", (object)entity.LaudoMedico.Conteudo ?? DBNull.Value, DbType.Binary, _databaseType));
                 var id = await command.ExecuteScalarAsync();
                 if (id != null && id != DBNull.Value)
                 {
@@ -61,7 +61,8 @@ namespace AcademiaDoZe.Infraestrutura.Repositories
                 + "data_fim = @Data_fim, "
                 + "objetivo = @Objetivo, "
                 + "restricao_medica = @Restricao_medica, "
-                + "obs_restricao= @Obs_restricao "
+                + "obs_restricao = @Obs_restricao, "
+                + "laudo_medico = @Laudo_medico "
                 + $"WHERE {IdTableName} = @Matricula_id";
                 await using var command = DbProvider.CreateCommand(query, connection);
                 command.Parameters.Add(DbProvider.CreateParameter("@Matricula_id", entity.Id, DbType.String, _databaseType));
@@ -71,6 +72,7 @@ namespace AcademiaDoZe.Infraestrutura.Repositories
                 command.Parameters.Add(DbProvider.CreateParameter("@Objetivo", entity.Objetivo, DbType.String, _databaseType));
                 command.Parameters.Add(DbProvider.CreateParameter("@Restricao_medica", (int)entity.RestricoesMedicas, DbType.Int32, _databaseType));
                 command.Parameters.Add(DbProvider.CreateParameter("@Obs_restricao", entity.ObservacoesRestricoes, DbType.String, _databaseType));
+                command.Parameters.Add(DbProvider.CreateParameter("@Laudo_medico", (object)entity.LaudoMedico.Conteudo ?? DBNull.Value, DbType.Binary, _databaseType));
 
                 int rowsAffected = await command.ExecuteNonQueryAsync();
                 if (rowsAffected == 0)
@@ -91,8 +93,9 @@ namespace AcademiaDoZe.Infraestrutura.Repositories
             {
                 await using var connection = await GetOpenConnectionAsync();
                 string query = $"SELECT * FROM {TableName} WHERE data_fim >= {(_databaseType == DatabaseType.SqlServer ? "GETDATE()" :
-                "CURRENT_DATE()")} {(idAluno > 0 ? "AND aluno_id = @id" : "")} ";
+                "CURRENT_DATE()")} {(idAluno > 0 ? "AND aluno_id = @Id" : "")} ";
                 await using var command = DbProvider.CreateCommand(query, connection);
+                command.Parameters.Add(DbProvider.CreateParameter("@Id", idAluno, DbType.String, _databaseType));
                 await using var reader = await command.ExecuteReaderAsync();
                 var matriculas = new List<Matricula>();
                 while (reader.Read())
@@ -116,7 +119,7 @@ namespace AcademiaDoZe.Infraestrutura.Repositories
                 await using var command = DbProvider.CreateCommand(query, connection);
                 command.Parameters.Add(DbProvider.CreateParameter("@Aluno_ID", alunoId, DbType.Int32, _databaseType));
                 await using var reader = await command.ExecuteReaderAsync();
-                 
+
                 while (reader.Read())
                 {
                     var matricula = await MapAsync(reader);
@@ -124,11 +127,31 @@ namespace AcademiaDoZe.Infraestrutura.Repositories
                 }
 
                 return null;
-                
+
             }
             catch (DbException ex)
             {
                 throw new InvalidOperationException($"Erro ao obter matricula por aluno com ID {alunoId}: {ex.Message}", ex);
+            }
+        }
+
+        public async Task<Matricula> ObterPorAlunoCpf(string cpf)
+        {
+            try
+            {
+                await using var connection = await GetOpenConnectionAsync();
+                string query = $"select m.* from {TableName}" +
+                               $" m inner join tb_aluno a on m.aluno_id = a.id_aluno " +
+                               $"where cpf Like @CPF;";
+                await using var command = DbProvider.CreateCommand(query, connection);
+                command.Parameters.Add(DbProvider.CreateParameter("@CPF", cpf + "%", DbType.String, _databaseType));
+                await using var reader = await command.ExecuteReaderAsync();
+                return await reader.ReadAsync() ? await MapAsync(reader) : null;
+
+            }
+            catch (DbException ex)
+            {
+                throw new InvalidOperationException($"Erro ao obter matricula por aluno com CPF {cpf}: {ex.Message}", ex);
             }
         }
 

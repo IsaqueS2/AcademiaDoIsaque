@@ -1,5 +1,4 @@
-﻿//ISAQUE DE OLIVEIRA DOS SANTOS
-using AcademiaDoZe.Application.Enums;
+﻿using AcademiaDoZe.Application.Enums;
 namespace AcademiaDoZe.Application.DTOs
 {
     public class MatriculaDTO
@@ -10,7 +9,7 @@ namespace AcademiaDoZe.Application.DTOs
         public required DateOnly DataInicio { get; set; }
         public required DateOnly DataFim { get; set; }
         public required string Objetivo { get; set; }
-        public  EAppMatriculaRestricoes RestricoesMedicas { get; set; }
+        public EAppMatriculaRestricoes? RestricoesMedicas { get; set; }
         public string? ObservacoesRestricoes { get; set; }
         public ArquivoDTO? LaudoMedico { get; set; }
     }

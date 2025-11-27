@@ -15,52 +15,52 @@ public class Matricula : Entity
     public DateOnly DataInicio { get; private set; }
     public DateOnly DataFim { get; private set; }
     public string Objetivo { get; private set; }
-    public EMatriculaRestricoes RestricoesMedicas { get; private set; }
+    public EMatriculaRestricoes? RestricoesMedicas { get; private set; }
     public string ObservacoesRestricoes { get; private set; }
     public Arquivo LaudoMedico { get; private set; }
 
-    private Matricula(int id, 
+    private Matricula(int id,
         Aluno alunoMatricula,
         EMatriculaPlano plano,
         DateOnly dataInicio,
         DateOnly dataFim,
         string objetivo,
-        EMatriculaRestricoes restricoesMedicas,
+        EMatriculaRestricoes? restricoesMedicas,
         string observacoes,
         Arquivo laudoMedico)
     : base(id)
     {
-        Id= id;
+        Id = id;
         AlunoMatricula = alunoMatricula;
         Plano = plano;
         DataInicio = dataInicio;
         DataFim = dataFim;
         Objetivo = objetivo;
         RestricoesMedicas = restricoesMedicas;
-        LaudoMedico =  laudoMedico;
+        LaudoMedico = laudoMedico;
         ObservacoesRestricoes = observacoes;
     }
 
-    public static Matricula Criar(int id, 
+    public static Matricula Criar(int id,
         Aluno alunoMatricula,
         EMatriculaPlano plano,
         DateOnly dataInicio,
         DateOnly dataFim,
         string objetivo,
-        EMatriculaRestricoes restricoesMedicas,
+        EMatriculaRestricoes? restricoesMedicas,
         string observacoes,
         Arquivo laudoMedico)
     {
-        if (alunoMatricula ==  null) throw new DomainException("ALUNO_OBRIGATORIO");
+        if (alunoMatricula == null) throw new DomainException("ALUNO_OBRIGATORIO");
         if (string.IsNullOrWhiteSpace(objetivo)) throw new DomainException("OBJETIVO_OBRIGATORIO");
         objetivo = TextoNormalizadoService.LimparEspacos(objetivo);
         int idade = CalculoService.CalcularIdade(alunoMatricula.DataNascimento);
         Console.WriteLine($"{idade}");
         if (idade >= 12 & idade <= 16)
         {
-            if(laudoMedico == null) throw new DomainException("LAUDO_OBRIGATORIO");
+            if (laudoMedico == null) throw new DomainException("LAUDO_OBRIGATORIO");
         }
-        if (restricoesMedicas != null && string.IsNullOrWhiteSpace(observacoes)) { throw new DomainException($"OBSERVACOES_OBRIGATORIO Oberservações"); }
+        if (restricoesMedicas > 0 && restricoesMedicas != null && string.IsNullOrWhiteSpace(observacoes)) { throw new DomainException($"OBSERVACOES_OBRIGATORIO Oberservações"); }
         observacoes = TextoNormalizadoService.LimparEspacos(observacoes);
 
         return new Matricula(id, alunoMatricula, plano, dataInicio, dataFim, objetivo, restricoesMedicas, observacoes, laudoMedico);

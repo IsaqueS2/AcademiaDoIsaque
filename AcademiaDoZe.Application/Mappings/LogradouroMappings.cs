@@ -31,11 +31,11 @@ namespace AcademiaDoZe.Application.Mappings
         }
         public static Logradouro UpdateFromDto(this Logradouro logradouro, LogradouroDTO logradouroDto)
         {
-            // Cria uma nova instância do Logradouro com os valores atualizados
+       
 
             return Logradouro.Criar(
-            logradouro.Id, // Mantém o ID original
-            logradouro.Cep, // Mantém o CEP original
+            logradouro.Id, 
+            logradouro.Cep, 
             logradouroDto.Nome ?? logradouro.Nome,
             logradouroDto.Bairro ?? logradouro.Bairro,
             logradouroDto.Cidade ?? logradouro.Cidade,
